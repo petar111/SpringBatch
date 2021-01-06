@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:batch-int ="http://www.springframework.org/schema/batch-integration"
+       xmlns:int ="http://www.springframework.org/schema/integration"
+       xmlns:int-file ="http://www.springframework.org/schema/integration/file"
+       xmlns:context ="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+    http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/batch-integration 
+    http://www.springframework.org/schema/batch-integration/spring-batch-integration.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/integration/file 
+    http://www.springframework.org/schema/integration/file/spring-integration-file-5.2.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd"
+>
+	  
+    <bean name="/Batch" class="com.springteam.springbatch.config.SpringBatchConfiguration" ></bean>    
+  
+    <context:annotation-config />
+    
+    <int:channel id="inbound" />
+    <int:channel id="outbound" />
+    <int:channel id="logging" />
+    
+    <int-file:inbound-channel-adapter directory="file:/tmp/" id="indboundFileChannelAdapter" filename-pattern="*.csv" channel="inbound">
+        <int:poller fixed-rate="1000" />
+    </int-file:inbound-channel-adapter>
+    
+    <int:transformer input-channel="inbound" output-channel="outbound" >
+        <bean class="com.springteam.springbatch.launcher.MessageJobLauncher">
+            <constructor-arg name="job" ref="chemicalJob" />
+            <constructor-arg name="filenameKey" value="file.name" />
+        </bean>
+    </int:transformer>
+    
+    <batch-int:job-launching-gateway request-channel="outbound" reply-channel="logging" />
+    
+    <int:logging-channel-adapter channel="logging" />
+         
+</beans>
